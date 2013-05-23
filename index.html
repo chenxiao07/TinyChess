@@ -1,0 +1,95 @@
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Chinese Chess</title>
+</head>
+<body></body>
+<script charset = "utf-8">
+document.body.innerHTML = "<canvas id = 'c', width='540', height='600'></canvas>";
+C=document.body.children[0];
+C.addEventListener("click", onClick, false);
+ctx = C.getContext('2d');b=[];S=null;Q=M=N=j=i=I=8e3;L=[];K=1;
+for(p in ctx) ctx[p[0]+(p[6]||'')]=ctx[p];
+for(i=0;i<45;i++) {
+    b[i]=i<9?6-Math.abs(4-i):i==19||i==25?1:i>26&&i<36?i%2?7:0:0;
+    b[89-i]=-b[i];
+}
+setInterval(function (){
+    if(!K){M=Search(1,-I,I,4);N=M[2][parseInt(Math.random()*M[2].length)];Move(N[0],N[1]);K^=1}},1e3);
+setInterval(function () {
+    var w,e,x,y,q = ["炮","车","马","象","士","将","兵", "帅","卒"];
+    with(ctx) {
+        ba();fillStyle="#cc8";fc(0,0,540,600);strokeStyle = "black";
+        for(i=0;i<90;i++) {
+            if(i%45<9){m(X(i),Y(i));l(X(i+36),Y(i+36));if(i==0||i==8)l(X(i+45),Y(i+45));}
+            if(i%9==0){m(X(i),Y(i));l(X(i+8),Y(i+8));}
+            if(i==3||i==5||i==66||i==68){m(X(i),Y(i));w=i%4>1?20:16;l(X(i+w),Y(i+w));}
+        }s();
+        for(i=0;i<90;i++) {
+            if(b[i] != "") {
+                e=b[i]<6?q[Math.abs(b[i])-1]:q[b[i]+1];
+                ba();x=X(i),y=Y(i);fillStyle=S==i?'#aaa':'#fff';
+                strokeStyle='#000';a(x,y,25,0,7,0);f();
+                fillStyle=b[i]>0?"#811":"#181";font='bold 32px Consolas';
+                fx(e,x-17,y+11);s();
+            }
+            for(t in L)if(i==L[t]){ba();strokeStyle='#f00';a(X(i),Y(i),8,0,7,0);s();}
+        }
+    }
+},30);
+function X(x) {return (x%9)*60+30;}
+function Y(y) {return parseInt(y/9)*60+30;}
+
+function onClick(e) {
+    i=parseInt(e.pageX/60);j=parseInt(e.pageY/60);Q=i+j*9;
+    if(!K||!inCircle(e.pageX,e.pageY,i*60+30,j*60+30,25))return 0;
+    if(S==null){
+        if(b[Q]<0){S=Q;L=MoveList(S);}
+    }else{
+        for(t in L)if(Q==L[t]){Move(S, Q);S=null;L=[];K^=1;return 1;}
+        if(b[Q]<0){S=Q;L=MoveList(S);}
+    }
+    function inCircle(x,y,cx,cy,r){
+        return Math.sqrt((cx-x)*(cx-x)+(cy-y)*(cy-y))>r?0:1;
+    }
+}
+function Move(f,t){M=b[t];b[t]=b[f];b[f]=0;return M;}
+
+function MoveList(from) {
+    if(!b[from]) return [];
+    var s,t, r, y, p, oj, o, k, u, list, j;
+    s=[1,9,-1,-9,1,9,-1,-9,0,-7,17,7,-17,11,19,-11,-19,0,8,10,-8,-10,0,3,8,26,17,16,20,-16,-20,0];
+    k=b[from]>0?1:-1;u=k*b[from];list=[];j=u>2&&u<6?s[23+u-2]:s[23];
+    while(r=s[++j]) {
+        y=from;p=0;oj=u<5?s[j-9]:-I;o=y+oj;
+        do {
+            y+=r;
+            if(o>=0&&o<90&&b[o]||u==4&&(y-45)*k>0||
+               y<0||y>89||Math.abs((y-r)%9-y%9)>3?1:0||
+               u>4&&u<7&&(y%9<3||y%9>5||y/9>3&&y/9<7)||
+               u==7&&(r==-k*9||r!=k*9&&(y-44.5)*k<0)) break;
+            t = b[y];
+            if(k*t>0&&(u!=1||p)) break;
+            if(t&&!p&&u==1) continue;
+            if(!p||p&&k*t<0) list.push(y);
+            if(u>2) break;
+        } while(!t||u==1&&(p=p^1));
+    }return list;
+}
+
+function Search(k,q,l,n) {
+    var m=-I,id,list,r,v,z=[],V,i=M=0;c=[0,22,52,13,6,6,555,2];
+    if(!n||q>=l){for(;i<90;i++)M+=(b[i]>0?1:-1)*c[Math.abs(b[i])];return [M,0];}
+    for(;i<90;i++)if(k*b[i]>0) {
+        list=MoveList(i);
+        for(id in list) {
+            r=Move(i,list[id]);V=Search(-k,-l,q>m?-q:-m,n-1);
+            v=-V[0];Move(list[id],i);b[list[id]] = r;
+            if(v==m){z.push([i,list[id]]);}
+            if(v>m){m=v;z=[[i,list[id]]];}
+        }
+    }return [m,0,z];
+}
+</script>
+</html>
